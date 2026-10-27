@@ -1,0 +1,502 @@
+<title>TradingAgents CE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a trading-desk ticket. Masthead, then the latest call as a decision strip,
+   then the firm's org chart as the navigator for each desk's written report. */
+:root {
+  --bg: #f3f5f8;
+  --panel: #ffffff;
+  --ink: #15202e;
+  --muted: #5a6778;
+  --line: #d8dee7;
+  --accent: #1d4ed8;
+  --accent-soft: #e3ebfd;
+  --buy: #0f7a4a;
+  --ow: #3f8f2f;
+  --hold: #a66a00;
+  --uw: #c2531a;
+  --sell: #b42318;
+  --buy-soft: #e2f3ea;
+  --warn-soft: #fbf0dc;
+  --bad-soft: #fbe6e3;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141c; --panel: #151d28; --ink: #e4e9f0; --muted: #94a1b3; --line: #273243;
+    --accent: #7aa2ff; --accent-soft: #1b2a4a;
+    --buy: #3ccf8e; --ow: #8bd36b; --hold: #f0b44c; --uw: #f08a50; --sell: #ff7b6e;
+    --buy-soft: #12301f; --warn-soft: #33270f; --bad-soft: #3a1714;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141c; --panel: #151d28; --ink: #e4e9f0; --muted: #94a1b3; --line: #273243;
+  --accent: #7aa2ff; --accent-soft: #1b2a4a;
+  --buy: #3ccf8e; --ow: #8bd36b; --hold: #f0b44c; --uw: #f08a50; --sell: #ff7b6e;
+  --buy-soft: #12301f; --warn-soft: #33270f; --bad-soft: #3a1714;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h2 { font-size: 1.55rem; font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.label { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 18px; }
+.section-head { display: grid; gap: 6px; }
+.section-head p { color: var(--muted); max-width: 68ch; }
+
+/* Masthead */
+.mast { display: grid; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 26px; }
+.mast-top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.brand { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); }
+.brand b { color: var(--ink); font-weight: 500; }
+.mast h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.01em; }
+.mast h1 span { color: var(--accent); }
+.mast p.lede { max-width: 66ch; color: var(--muted); font-size: 1.05rem; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a { font-family: var(--f-mono); font-size: 0.78rem; text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 5px 10px; border-radius: 4px; }
+.links a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Decision ticket */
+.ticket { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+.ticket > div { padding: 22px 24px; min-width: 0; display: grid; gap: 16px; align-content: start; }
+.ticket > div + div { border-left: 1px solid var(--line); }
+.call { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.ticker { font-family: var(--f-display); font-size: 2.6rem; font-weight: 700; letter-spacing: 0.01em; }
+.pill { font-family: var(--f-mono); font-size: 0.8rem; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: var(--buy-soft); color: var(--ow); border: 1px solid currentColor; }
+.asof { color: var(--muted); font-size: 0.85rem; }
+.scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.scale div { font-family: var(--f-mono); font-size: 0.7rem; text-align: center; padding: 7px 2px 6px; border-radius: 4px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.scale div.on { color: var(--panel); background: var(--ow); border-color: var(--ow); font-weight: 500; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.stat { display: grid; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; }
+.stat .v { font-family: var(--f-mono); font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 0.8rem; color: var(--muted); }
+.summary { color: var(--ink); max-width: 60ch; }
+
+/* Tranches */
+.tranches { display: grid; gap: 8px; }
+.tr { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; }
+.tr .n { font-family: var(--f-mono); font-size: 0.75rem; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); }
+.tr .w { font-size: 0.9rem; min-width: 0; }
+.tr .w small { display: block; color: var(--muted); font-size: 0.78rem; }
+.tr .p { font-family: var(--f-mono); font-size: 0.9rem; text-align: right; }
+.tr.stop { background: var(--bad-soft); border-color: transparent; }
+.tr.stop .n { background: var(--sell); color: var(--panel); }
+
+/* Charts */
+.charts { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px; min-width: 0; }
+.chart p.cap { color: var(--muted); font-size: 0.82rem; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.scroll { overflow-x: auto; }
+.scroll svg { min-width: 560px; }
+.chart svg text { font-family: var(--f-mono); fill: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+/* Triggers */
+.triggers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.trig { border-radius: 8px; padding: 16px 18px; display: grid; gap: 8px; }
+.trig.up { background: var(--buy-soft); }
+.trig.down { background: var(--bad-soft); }
+.trig h3 { font-size: 1rem; }
+.trig.up h3 { color: var(--buy); }
+.trig.down h3 { color: var(--sell); }
+.trig ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.92rem; }
+
+/* Org chart navigator */
+.org { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+.desk { display: grid; gap: 6px; align-content: start; position: relative; }
+.desk .label { padding-left: 2px; }
+.desk + .desk::before { content: ""; position: absolute; left: -9px; top: 32px; width: 8px; height: 1px; background: var(--line); }
+.agent { all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 1px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); font-size: 0.88rem; font-weight: 500; }
+.agent small { font-weight: 400; color: var(--muted); font-size: 0.74rem; }
+.agent:hover { border-color: var(--accent); }
+.agent[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.agent:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reader { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 22px 26px; min-width: 0; display: grid; gap: 14px; }
+.reader-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.reader-head p { color: var(--muted); font-size: 0.85rem; max-width: 60ch; }
+.doc { max-width: 76ch; min-width: 0; }
+.doc > * + * { margin-top: 0.8em; }
+.doc h4, .doc h5, .doc h6 { font-family: var(--f-display); font-size: 1.05rem; font-weight: 600; margin-top: 1.4em; }
+.doc ul, .doc ol { padding-left: 20px; }
+.doc li + li { margin-top: 3px; }
+.doc strong { font-weight: 600; }
+.doc em { color: var(--muted); }
+.doc .table { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+.doc table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+.doc th, .doc td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc th { font-family: var(--f-mono); font-weight: 500; font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+.doc tr:last-child td { border-bottom: 0; }
+.doc p { overflow-wrap: anywhere; }
+
+/* How it works */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.step { display: grid; gap: 6px; border-top: 2px solid var(--ink); padding-top: 12px; }
+.step p { color: var(--muted); font-size: 0.92rem; }
+.run { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+.box p { color: var(--muted); font-size: 0.9rem; }
+pre { margin: 0; overflow-x: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-family: var(--f-mono); font-size: 0.8rem; line-height: 1.6; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-family: var(--f-mono); font-size: 0.76rem; padding: 3px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); }
+
+/* Caveats and sources */
+.caveat { background: var(--warn-soft); border-radius: 8px; padding: 16px 20px; display: grid; gap: 8px; }
+.caveat h3 { color: var(--hold); font-size: 1rem; }
+.caveat ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.92rem; }
+.sources { columns: 2 300px; column-gap: 28px; font-size: 0.84rem; margin: 0; padding-left: 18px; }
+.sources li { break-inside: avoid; margin-bottom: 4px; }
+footer { color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--line); padding-top: 18px; }
+
+@media (max-width: 860px) {
+  .ticket, .charts, .run, .triggers { grid-template-columns: minmax(0, 1fr); }
+  .ticket > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .org { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .desk + .desk::before { display: none; }
+  .desk.wide { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .ticket > div, .reader { padding: 18px 16px; }
+  .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .scale div { font-size: 0.62rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .doc { animation: fade 0.18s ease-out; }
+  @keyframes fade { from { opacity: 0.4; } to { opacity: 1; } }
+}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="mast-top">
+    <div class="brand"><b>nickchoo-ce/TradingAgents-CE</b> · fork of TauricResearch/TradingAgents v0.7.1</div>
+    <nav class="links" aria-label="Project links">
+      <a href="https://github.com/nickchoo-ce/TradingAgents-CE" target="_blank" rel="noopener">Fork on GitHub</a>
+      <a href="https://github.com/TauricResearch/TradingAgents" target="_blank" rel="noopener">Upstream</a>
+      <a href="https://arxiv.org/abs/2412.20138" target="_blank" rel="noopener">Paper</a>
+    </nav>
+  </div>
+  <h1>A trading firm of <span>12 AI agents</span>, one call per ticker</h1>
+  <p class="lede">Analysts research a stock, researchers argue bull against bear, a trader writes the order, a risk desk challenges it, and a portfolio manager signs off. This page shows the firm's latest call and every desk's written report behind it.</p>
+</header>
+
+<section aria-labelledby="latest">
+  <div class="section-head">
+    <span class="label">Latest call</span>
+    <h2 id="latest">NVDA, analysed 27 Oct 2026</h2>
+  </div>
+
+  <div class="ticket">
+    <div>
+      <div class="call">
+        <span class="ticker">NVDA</span>
+        <span class="pill">Overweight</span>
+        <span class="asof">Nvidia · NASDAQ · no current position</span>
+      </div>
+      <div class="scale" role="img" aria-label="Five-tier rating scale with Overweight selected">
+        <div>Sell</div><div>Underweight</div><div>Hold</div><div class="on">Overweight</div><div>Buy</div>
+      </div>
+      <p class="summary">Build a position gradually. Growth is still accelerating and the stock trades near the market's multiple, but margins have peaked, the Fed is hiking, and the price has not yet confirmed a turn. The biggest step waits until after earnings.</p>
+      <div class="stats">
+        <div class="stat"><span class="label">Price, 27 Oct intraday</span><span class="v">$218.06</span><span class="s">8% below 2 Oct close of $235.93</span></div>
+        <div class="stat"><span class="label">Revenue growth, Q2 FY27</span><span class="v">+106%</span><span class="s">year on year, to $96.2B</span></div>
+        <div class="stat"><span class="label">Forward P/E</span><span class="v">14–18×</span><span class="s">sources disagree; S&amp;P ~19×</span></div>
+        <div class="stat"><span class="label">Sentiment</span><span class="v">6 / 10</span><span class="s">Mildly bullish, low confidence</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="label">Order plan</span>
+      <div class="tranches">
+        <div class="tr"><span class="n">1</span><span class="w">First third now<small>Limit order at the 26 Oct close</small></span><span class="p">$216.00</span></div>
+        <div class="tr"><span class="n">2</span><span class="w">Second third on a daily close above the 50-day average<small>Signals the October pullback is over</small></span><span class="p">&gt; $223.00</span></div>
+        <div class="tr"><span class="n">3</span><span class="w">Final third after Q3 earnings, ~17 Nov<small>Only if revenue ≥ $108B guide and Q4 guide grows</small></span><span class="p">after print</span></div>
+        <div class="tr stop"><span class="n">×</span><span class="w">Exit everything on a daily close below<small>Below the 200-day average and October low</small></span><span class="p">$198.00</span></div>
+      </div>
+      <p class="asof">First third risks about 0.11% of the portfolio, on a standard 4% position. No new buying the session before the 28 Oct Fed decision or the earnings release.</p>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart">
+      <h3>Where the price sits</h3>
+      <p class="cap">Key levels the plan is built on, in US dollars. Indicator values are from third-party sites dated 15–23 Oct.</p>
+      <div class="scroll"><svg id="ladder" viewBox="0 0 640 170" role="img" aria-label="Price levels from the stop at 198 dollars to the 52-week high at 243.37 dollars, with the current price at 218.06"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--sell)"></i>Exit</span>
+        <span><i style="background:var(--muted)"></i>Averages and range</span>
+        <span><i style="background:var(--accent)"></i>Price and orders</span>
+      </div>
+    </div>
+    <div class="chart">
+      <h3>Quarterly revenue, $B</h3>
+      <p class="cap">Data Center is ~93% of revenue. Q3 FY27 is the company's guide of $108B ±2%.</p>
+      <svg id="rev" viewBox="0 0 400 210" role="img" aria-label="Revenue rising from 57.0 billion in Q3 FY26 to 96.2 billion in Q2 FY27, with 108 billion guided for Q3 FY27"></svg>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>Reported</span>
+        <span><i style="background:var(--accent-soft);outline:1px dashed var(--accent);outline-offset:-1px"></i>Guide</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="triggers">
+    <div class="trig up">
+      <h3>Upgrade to Buy if</h3>
+      <ul>
+        <li>Q3 beats and the Q4 guide is raised</li>
+        <li>Price recovers above $223 with MACD turning positive</li>
+        <li>China H200 revenue is confirmed on top of the guide</li>
+      </ul>
+    </div>
+    <div class="trig down">
+      <h3>Downgrade to Hold or lower if</h3>
+      <ul>
+        <li>Q3 revenue falls short of the $108B guide, or the Q4 guide is flat</li>
+        <li>Gross margin is guided below 71%</li>
+        <li>Hyperscalers cut capex plans, or the stock closes below $198</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="desks">
+  <div class="section-head">
+    <span class="label">Behind the call</span>
+    <h2 id="desks">Read each desk's report</h2>
+    <p>The firm works left to right. The four analysts run at the same time, then each desk reads everything before it. Pick an agent to read what it wrote.</p>
+  </div>
+
+  <div class="org" role="tablist" aria-label="Agents">
+    <div class="desk wide">
+      <span class="label">1 · Analysts</span>
+      <button class="agent" role="tab" id="t-market" data-id="market">Market<small>Technical indicators</small></button>
+      <button class="agent" role="tab" id="t-sentiment" data-id="sentiment">Sentiment<small>News, StockTwits, Reddit</small></button>
+      <button class="agent" role="tab" id="t-news" data-id="news">News<small>Company, sector, macro</small></button>
+      <button class="agent" role="tab" id="t-fundamentals" data-id="fundamentals">Fundamentals<small>Financials, valuation</small></button>
+    </div>
+    <div class="desk">
+      <span class="label">2 · Research</span>
+      <button class="agent" role="tab" id="t-bull" data-id="bull">Bull researcher<small>Case for buying</small></button>
+      <button class="agent" role="tab" id="t-bear" data-id="bear">Bear researcher<small>Case against</small></button>
+      <button class="agent" role="tab" id="t-manager" data-id="manager">Research manager<small>Picks the side</small></button>
+    </div>
+    <div class="desk">
+      <span class="label">3 · Trading</span>
+      <button class="agent" role="tab" id="t-trader" data-id="trader">Trader<small>Entry, stop, size</small></button>
+    </div>
+    <div class="desk">
+      <span class="label">4 · Risk</span>
+      <button class="agent" role="tab" id="t-aggressive" data-id="aggressive">Aggressive<small>Push for upside</small></button>
+      <button class="agent" role="tab" id="t-conservative" data-id="conservative">Conservative<small>Protect capital</small></button>
+      <button class="agent" role="tab" id="t-neutral" data-id="neutral">Neutral<small>Balance the two</small></button>
+    </div>
+    <div class="desk">
+      <span class="label">5 · Sign-off</span>
+      <button class="agent" role="tab" id="t-decision" data-id="decision">Portfolio manager<small>Final rating</small></button>
+    </div>
+  </div>
+
+  <article class="reader" role="tabpanel" id="reader" aria-live="polite">
+    <div class="reader-head">
+      <h3 id="reader-title">Portfolio manager</h3>
+      <p id="reader-role"></p>
+    </div>
+    <div class="doc" id="reader-body"></div>
+  </article>
+</section>
+
+<section aria-labelledby="how">
+  <div class="section-head">
+    <span class="label">How it works</span>
+    <h2 id="how">One ticker in, one rated decision out</h2>
+    <p>Each agent is a role with its own instructions in <span class="num">tradingagents/agents/</span>. The framework runs them as a LangGraph pipeline on any LLM provider.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><h3>Research in parallel</h3><p>Four analysts pull prices and indicators, filings, news and macro data, and social posts, then each writes a report ending in a summary table.</p></div>
+    <div class="step"><h3>Debate the thesis</h3><p>A bull and a bear argue from those reports. The research manager rates the case on a five-tier scale. Disagreement alone is never a reason to hold.</p></div>
+    <div class="step"><h3>Write the order</h3><p>The trader turns the rating into a buy, hold or sell with entry and stop as exact prices, grounded in the technical levels.</p></div>
+    <div class="step"><h3>Stress-test and sign</h3><p>Three risk analysts argue the size and stops. The portfolio manager weighs them, sets the final rating, and names what would change it.</p></div>
+  </div>
+
+  <div class="run">
+    <div class="box">
+      <h3>Run the framework</h3>
+      <p>Needs Python 3.11+, an LLM API key, and access to Yahoo Finance and SEC EDGAR.</p>
+<pre>pip install .
+export ANTHROPIC_API_KEY=...
+tradingagents --ticker NVDA --date 2026-10-27 \
+  --analysts market,social,news,fundamentals --save</pre>
+    </div>
+    <div class="box">
+      <h3>Or ask Claude Code</h3>
+      <p>The fork's <span class="num">tradingagents-analysis</span> skill plays all 12 roles in a session when no key or data feed is available, then saves the report in the same format.</p>
+<pre>"Analyze AAPL with the TradingAgents skill"</pre>
+      <span class="label">Markets</span>
+      <div class="chips"><span>US · AAPL</span><span>Hong Kong · 0700.HK</span><span>Tokyo · 7203.T</span><span>London · AZN.L</span><span>India · .NS</span><span>China A · .SS .SZ</span><span>Crypto · BTC-USD</span></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="data">
+  <div class="section-head">
+    <span class="label">Data and sources</span>
+    <h2 id="data">How far to trust these numbers</h2>
+  </div>
+  <div class="caveat">
+    <h3>This call was made with web-sourced data</h3>
+    <ul>
+      <li>The framework's own feeds (Yahoo Finance, SEC EDGAR, FRED, StockTwits, Reddit) were blocked where it ran, so figures come from news and market sites found by search.</li>
+      <li>Sites disagreed on indicator values. The 200-day average ranged from $203 to $226 across sources, and the plan uses the best-supported $203.</li>
+      <li>No volatility (ATR) figure or 2026 insider trades could be found. Sentiment comes from summaries, not the posts themselves.</li>
+      <li>Check every level on a live chart before placing an order. This is research, not investment advice.</li>
+    </ul>
+  </div>
+  <ol class="sources">
+    <li><a href="https://www.google.com/finance/quote/NVDA:NASDAQ" target="_blank" rel="noopener">Google Finance, NVDA quote</a></li>
+    <li><a href="https://tradingeconomics.com/nvda:us" target="_blank" rel="noopener">Trading Economics, NVDA</a></li>
+    <li><a href="https://financhill.com/stock-price-chart/nvda-technical-analysis" target="_blank" rel="noopener">Financhill, technicals</a></li>
+    <li><a href="https://www.tradingkey.com/markets/stocks/nvda/technical" target="_blank" rel="noopener">TradingKey, technicals</a></li>
+    <li><a href="https://www.investtech.com/main/market.php?CompanyID=10400335" target="_blank" rel="noopener">Investtech, support and resistance</a></li>
+    <li><a href="https://www.webull.com/blog/304-Nvidia-Q2-FY2027-Earnings-Beats-Revenue-EPS-Estimates-Guides-Q3-to-108B" target="_blank" rel="noopener">Webull, Q2 FY27 results and Q3 guide</a></li>
+    <li><a href="https://www.cnbc.com/2026/02/25/nvidia-nvda-earnings-report-q4-2026.html" target="_blank" rel="noopener">CNBC, Q4 FY26 results</a></li>
+    <li><a href="https://stockanalysis.com/stocks/nvda/forecast/" target="_blank" rel="noopener">StockAnalysis, analyst targets</a></li>
+    <li><a href="https://finance.yahoo.com/technology/ai/articles/nvidia-meta-expand-collaboration-muse-055200163.html" target="_blank" rel="noopener">Yahoo Finance, Nvidia and Meta</a></li>
+    <li><a href="https://finance.yahoo.com/markets/stocks/articles/nasdaq-futures-drop-over-1-093849296.html" target="_blank" rel="noopener">Reuters via Yahoo, 22 Oct selloff</a></li>
+    <li><a href="https://247wallst.com/investing/2026/10/22/chip-stocks-fall-as-supply-warning-deepens-ai-selloff-marvell-and-amd-sink-8-intel-drops-7/" target="_blank" rel="noopener">24/7 Wall St, Lam Research warning</a></li>
+    <li><a href="https://www.cnbc.com/2026/10/26/fed-decision-expectations-october-meeting.html" target="_blank" rel="noopener">CNBC, October Fed preview</a></li>
+    <li><a href="https://www.digitimes.com/news/a20260521VL204/nvidia-capex-outlook-revenue-2027-china.html" target="_blank" rel="noopener">Digitimes, China excluded from outlook</a></li>
+    <li><a href="https://stocktwits.com/news-articles/markets/equity/nvidia-picks-up-3-b-stock-in-meta-s-equity-offering-will-help-improve-muse-ai-platform/cZUeGE3RBzH" target="_blank" rel="noopener">Stocktwits, sentiment on the Meta stake</a></li>
+    <li><a href="https://247wallst.com/cards/nvidia-dominates-reddit-chatter-with-167-comments-and-the-only-c-nvda-reddit-radar-01m4r5eb7fyf79gpbepfp40680" target="_blank" rel="noopener">24/7 Wall St, Reddit Radar</a></li>
+  </ol>
+</section>
+
+<footer>Built from <span class="num">analyses/NVDA_2026-10-27/</span> in nickchoo-ce/TradingAgents-CE. TradingAgents is a research framework by Tauric Research and is not financial, investment or trading advice.</footer>
+
+</div>
+
+<script>
+const REPORTS = /*__REPORTS__*/;
+const ROLES = {
+  market: ["Market analyst", "Reads the price trend and up to eight complementary indicators."],
+  sentiment: ["Sentiment analyst", "Scores the mood across news, StockTwits and Reddit from 0 to 10."],
+  news: ["News analyst", "Covers company news, the sector, macro data and policy."],
+  fundamentals: ["Fundamentals analyst", "Covers financial statements, guidance, valuation and insider trades."],
+  bull: ["Bull researcher", "Builds the strongest evidence-based case for buying."],
+  bear: ["Bear researcher", "Rebuts the bull and argues the risks."],
+  manager: ["Research manager", "Judges the debate and sets a five-tier recommendation."],
+  trader: ["Trader", "Turns the recommendation into an order with exact prices."],
+  aggressive: ["Aggressive risk analyst", "Argues for more size and upside."],
+  conservative: ["Conservative risk analyst", "Argues for protecting capital."],
+  neutral: ["Neutral risk analyst", "Looks for the balance between the other two."],
+  decision: ["Portfolio manager", "Weighs the risk debate and signs off on the final rating."]
+};
+const tabs = Array.from(document.querySelectorAll(".agent"));
+function show(id) {
+  if (!REPORTS[id]) id = "decision";
+  tabs.forEach(t => {
+    const on = t.dataset.id === id;
+    t.setAttribute("aria-selected", on ? "true" : "false");
+    t.tabIndex = on ? 0 : -1;
+  });
+  document.getElementById("reader").setAttribute("aria-labelledby", "t-" + id);
+  document.getElementById("reader-title").textContent = ROLES[id][0];
+  document.getElementById("reader-role").textContent = ROLES[id][1];
+  // Rendered server-side by the repo's markdown renderer with raw HTML disabled.
+  const body = document.getElementById("reader-body");
+  body.innerHTML = REPORTS[id];
+  body.querySelectorAll("a[href^='http']").forEach(a => { a.target = "_blank"; a.rel = "noopener"; });
+}
+tabs.forEach((t, i) => {
+  t.addEventListener("click", () => show(t.dataset.id));
+  t.addEventListener("keydown", e => {
+    const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const next = tabs[(i + d + tabs.length) % tabs.length];
+    next.focus(); show(next.dataset.id);
+  });
+});
+show("decision");
+
+const NS = "http://www.w3.org/2000/svg";
+function el(name, attrs, parent, text) {
+  const n = document.createElementNS(NS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text != null) n.textContent = text;
+  parent.appendChild(n);
+  return n;
+}
+
+// Price ladder: one linear scale from 195 to 245.
+(function ladder() {
+  const svg = document.getElementById("ladder");
+  const W = 640, x0 = 24, x1 = 616, lo = 195, hi = 245, axisY = 92;
+  const x = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+  // Trading range band, 209 to 239
+  el("rect", { x: x(209), y: axisY - 14, width: x(239) - x(209), height: 28, fill: "var(--accent-soft)", rx: 3 }, svg);
+  el("text", { x: (x(209) + x(239)) / 2, y: axisY + 4, "text-anchor": "middle", "font-size": 10.5 }, svg, "October range");
+  el("line", { x1: x0, x2: x1, y1: axisY, y2: axisY, stroke: "var(--line)", "stroke-width": 1 }, svg);
+  for (let v = 200; v <= 245; v += 10) {
+    el("line", { x1: x(v), x2: x(v), y1: axisY + 16, y2: axisY + 20, stroke: "var(--muted)" }, svg);
+  }
+  // Above the axis: price, orders. Below: averages and range edges.
+  const marks = [
+    { v: 198, t: "Stop 198", c: "var(--sell)", up: true, row: 0 },
+    { v: 216, t: "Buy 1 · 216", c: "var(--accent)", up: false, row: 1 },
+    { v: 218.06, t: "Now 218.06", c: "var(--accent)", up: true, row: 0, bold: true },
+    { v: 223, t: "Buy 2 · >223", c: "var(--accent)", up: true, row: 1 },
+    { v: 235.93, t: "2 Oct close 235.93", c: "var(--muted)", up: true, row: 0 },
+    { v: 202.84, t: "200-day 202.8", c: "var(--muted)", up: false, row: 0 },
+    { v: 209, t: "Support 209", c: "var(--muted)", up: false, row: 1 },
+    { v: 222.5, t: "50-day 222.5", c: "var(--muted)", up: false, row: 0 },
+    { v: 239, t: "Resistance 239", c: "var(--muted)", up: false, row: 1 },
+    { v: 243.37, t: "52-wk high", c: "var(--muted)", up: false, row: 0 }
+  ];
+  marks.forEach(m => {
+    const X = x(m.v);
+    const yText = m.up ? (m.row ? 38 : 20) : (m.row ? 166 : 150);
+    const yLine = m.up ? yText + 5 : yText - 12;
+    el("line", { x1: X, x2: X, y1: yLine, y2: m.up ? axisY - 14 : axisY + 14, stroke: m.c, "stroke-width": m.bold ? 2 : 1, "stroke-dasharray": m.bold ? "" : "3 3" }, svg);
+    if (m.bold) el("circle", { cx: X, cy: axisY, r: 5, fill: "var(--accent)" }, svg);
+    const anchor = X < 70 ? "start" : X > 570 ? "end" : "middle";
+    el("text", { x: X, y: yText, "text-anchor": anchor, "font-size": 11, style: "fill:" + m.c + (m.bold ? ";font-weight:600" : "") }, svg, m.t);
+  });
+})();
+
+// Revenue bars, $B, scale 0 to 120.
+(function rev() {
+  const svg = document.getElementById("rev");
+  const data = [["Q3 FY26", 57.0, "derived"], ["Q4 FY26", 68.1], ["Q1 FY27", 81.6], ["Q2 FY27", 96.2], ["Q3 FY27", 108.0, "guide"]];
+  const top = 18, base = 176, left = 34, right = 392, max = 120;
+  const y = v => base - v / max * (base - top);
+  [0, 40, 80, 120].forEach(g => {
+    el("line", { x1: left, x2: right, y1: y(g), y2: y(g), stroke: "var(--line)" }, svg);
+    el("text", { x: left - 6, y: y(g) + 3.5, "text-anchor": "end", "font-size": 10 }, svg, g);
+  });
+  const slot = (right - left) / data.length, bw = slot * 0.56;
+  data.forEach(([q, v, note], i) => {
+    const cx = left + slot * i + slot / 2;
+    const guide = note === "guide";
+    el("rect", { x: cx - bw / 2, y: y(v), width: bw, height: base - y(v), rx: 2,
+      fill: guide ? "var(--accent-soft)" : "var(--accent)", stroke: guide ? "var(--accent)" : "none",
+      "stroke-dasharray": guide ? "4 3" : "" }, svg);
+    el("text", { x: cx, y: y(v) - 6, "text-anchor": "middle", "font-size": 11, style: "fill:var(--ink)" }, svg, v.toFixed(1) + (note === "derived" ? "*" : ""));
+    el("text", { x: cx, y: base + 16, "text-anchor": "middle", "font-size": 10 }, svg, q);
+  });
+  el("text", { x: left, y: base + 32, "font-size": 9.5 }, svg, "* derived from Q4 FY26 being +20% on Q3");
+})();
+</script>
