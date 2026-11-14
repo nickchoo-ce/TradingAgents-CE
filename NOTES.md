@@ -122,3 +122,12 @@ run drops articles stamped after 00:00 UTC.
   - D `claude/fix-memory-reflection-marker` at /home/user/wt-memory-reflection-marker — lead 5. Owns `tradingagents/memory/log.py`.
 - Parked: lead 4 (needs Nick's design decision), 7, 8, 9, 10 (lower value or unverified; not attempted).
 - Next: Breaker commits one failing test per issue on its branch.
+- 08:25 UTC — Break done. Failing tests committed (test file only, not pushed): A `11fc725` (15 failing),
+  B `928dc4a` (2 failing), C `f07bd93` (9 failing), D `d763597` (6 failing, incl. one for a second defect: entry
+  separator inside a decision). Guards pass; full suite otherwise green; ruff clean in every worktree.
+- Lead decision: C PARKED. Existing tests (`test_stocktwits_resilience.py`, `test_symbols.py:98`) deliberately pin
+  "unknown base XYZ-USD is not crypto", so the fix is a product choice (extend the curated coin list, and with which
+  coins, vs pass asset type to the sentiment vendors). Question goes to Nick. Branch keeps the failing test, no PR.
+- Lead decision: D builder fixes both marker defects (REFLECTION: and entry separator) if one boring design covers
+  both; the separator test is not to be removed.
+- Next: builders A, B, D in parallel.
